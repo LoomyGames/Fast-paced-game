@@ -87,6 +87,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_YRotation;
         private Vector3 m_GroundContactNormal;
         private bool m_Jump, m_PreviouslyGrounded, m_Jumping, m_IsGrounded;
+        public int maxJumps = 3;
+        private int jumpNum = 0;
 
 
         public Vector3 Velocity
@@ -129,7 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             RotateView();
 
-            if (Input.GetButtonDown("Jump") && !m_Jump)
+            if (Input.GetButtonDown("Jump") && jumpNum < maxJumps-1)
             {
                 m_Jump = true;
             }
@@ -160,14 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (m_IsGrounded)
             {
                 m_RigidBody.drag = 5f;
-
-                if (m_Jump)
-                {
-                    m_RigidBody.drag = 0f;
-                    m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, 0f, m_RigidBody.velocity.z);
-                    m_RigidBody.AddForce(new Vector3(0f, movementSettings.JumpForce, 0f), ForceMode.Impulse);
-                    m_Jumping = true;
-                }
+                jumpNum = 0;
 
                 if (!m_Jumping && Mathf.Abs(input.x) < float.Epsilon && Mathf.Abs(input.y) < float.Epsilon && m_RigidBody.velocity.magnitude < 1f)
                 {
@@ -182,7 +177,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     StickToGroundHelper();
                 }
             }
-            m_Jump = false;
+
+            if (m_Jump)
+            {
+                m_RigidBody.drag = 0f;
+                m_RigidBody.velocity = new Vector3(m_RigidBody.velocity.x, 0f, m_RigidBody.velocity.z);
+                m_RigidBody.AddForce(new Vector3(0f, movementSettings.JumpForce, 0f), ForceMode.Impulse);
+                m_Jumping = true;
+                jumpNum++;
+                m_Jump = false;
+            }
+
+            if (jumpNum == maxJumps-1)
+            {
+                m_Jump = false;
+            }
+            
         }
 
 
@@ -255,10 +265,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_IsGrounded = false;
                 m_GroundContactNormal = Vector3.up;
             }
-            if (!m_PreviouslyGrounded && m_IsGrounded && m_Jumping)
-            {
-                m_Jumping = false;
-            }
+            
         }
     }
 }
