@@ -89,6 +89,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool m_Jump, m_PreviouslyGrounded, m_Jumping, m_IsGrounded;
         public int maxJumps = 3;
         private int jumpNum = 0;
+        private AudioSource playerAudio;
+        public AudioClip jumpSound;
+        public AudioClip walkSound;
+        public AudioClip landSound;
+        private bool playedSound = false;
 
 
         public Vector3 Velocity
@@ -124,6 +129,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_RigidBody = GetComponent<Rigidbody>();
             m_Capsule = GetComponent<CapsuleCollider>();
             mouseLook.Init (transform, cam.transform);
+            playerAudio = GetComponent<AudioSource>();
         }
 
 
@@ -131,7 +137,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             RotateView();
 
-            if (Input.GetButtonDown("Jump") && jumpNum < maxJumps-1)
+            if (Input.GetButtonDown("Jump") && jumpNum <= maxJumps-1)
             {
                 m_Jump = true;
             }
@@ -186,6 +192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Jumping = true;
                 jumpNum++;
                 m_Jump = false;
+                playerAudio.PlayOneShot(jumpSound);
             }
 
             if (jumpNum == maxJumps-1)
@@ -259,11 +266,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 m_IsGrounded = true;
                 m_GroundContactNormal = hitInfo.normal;
+                
+                if (!playedSound)
+                {
+                    playerAudio.PlayOneShot(landSound);
+                    playedSound = true;
+                }
+                
             }
             else
             {
                 m_IsGrounded = false;
                 m_GroundContactNormal = Vector3.up;
+                playedSound = false;
             }
             
         }
